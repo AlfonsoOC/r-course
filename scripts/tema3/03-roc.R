@@ -1,8 +1,8 @@
 install.packages("ROCR")
 library(ROCR)
 
-data1 <- read.csv("../data/tema3/roc-example-1.csv")
-data2 <- read.csv("../data/tema3/roc-example-2.csv")
+data1 <- read.csv("cursos/r-course-master/data/tema3/roc-example-1.csv")
+data2 <- read.csv("cursos/r-course-master/data/tema3/roc-example-2.csv")
 #0 -> fallo
 #1 -> éxito
 pred1 <- prediction(data1$prob, data1$class)
