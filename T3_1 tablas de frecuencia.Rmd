@@ -1,0 +1,69 @@
+---
+title: "Tablas de frecuencia"
+output:
+  html_document:
+    df_print: paged
+---
+
+## TABLAS DE FRECUENCIA o matrices de confucion
+
+primero abrimos el archivo college-per.cvs 
+
+```{r}
+cp <- read.csv("data/tema3/college-perf.csv")
+
+```
+
+con la funcion "ordered" asignamos a los "FACTORES" Low, Medium y high niveles, es decir que Low vale menos que Medium y este vale menos que High
+
+```{r}
+cp$Perf <- ordered(cp$Perf, 
+                   levels = c("Low", "Medium", "High"))
+cp$Pred <- ordered(cp$Pred,
+                   levels = c("Low", "Medium", "High"))
+
+
+
+```
+TABLAS DE FRECUENCIA o Matrices de confucion usando la funcion "table"
+
+```{r}
+table <- table(cp$Perf, cp$Pred, 
+               dnn =  c("Actual", "Predecido"))
+table
+```
+
+tambien podemos generar una tabla de frecuencia en porcentaje (en este caso todos los parametros son el 100%), usando la funcion "prop.table"
+
+```{r}
+prop.table(table)
+```
+
+tambien podemos generar una tabla de de frecuencias en porcentaje tomando el 100% por fila o por columna de la siguiente manera:
+
+```{r}
+round(prop.table(table, 1)*100, 2)
+
+#con 100% con las columnas
+round(prop.table(table, 2)*100, 2)
+
+```
+
+##visualizacion de tablas de frecuencia con DIAGRAMAS DE MOSAICO
+
+```{r}
+barplot(table, legend = TRUE, 
+        xlab = "Nota predecida por el modelo")
+```
+
+Grafica tipo mosaico 
+```{r}
+mosaicplot(table, main = "Eficiencia del modelo")
+```
+
+para saber las estadisticas de las tablas de frecuencia usamos la funcion "summary"
+```{r}
+summary(table)
+```
+la cual nos da el numero total de casos u observaciones en la tabla (4000), numero de factores que se estan analizando (2), y un tambien hace un test de independencia para los dos factores que estamos analizando, es decir un TEST DE CHI CUADRADA (4449) con 4 grados de livertad y  aqui un valor bajo de la P-value significa que las proporciones para las diferentes  clases son singnificativamente diferente y que por lo tanto estan relacionadas  es decir que no son independientes, en este caso "la eficiencia del modelo es buena" 
+
