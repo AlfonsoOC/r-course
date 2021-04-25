@@ -1,0 +1,85 @@
+---
+title: "ANALISIS DE COMPONENTES PRINCIPALES ACP"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+ACP es una tecnica estadistica para reducir la dimensionalidad, transforma los datos con muchas dimensiones a espacios con menos, utilizando TRANSFORMACIONES LINEALES.
+el objetivo es remplazar un numero grandes de variables que estan correlacionadas entre si con un numero menor de variables que no se encuentren relacionados entre si
+
+```{r}
+usarrests <- read.csv("data/tema3/USArrests.csv", stringsAsFactors = F) # para asegurarnos que el nombre de los estados no los ponga como factores le ponemos "stringAsFactor = FALSE" y asi los guarda como strings 
+```
+para hacer que la primera COLUMNA llamada "X" se convierta en el nombre de las filas utilizamos la FUNCION "rownames" y seleccionamos dicha columna
+```{r}
+rownames(usarrests) <- usarrests$X 
+```
+Ya que asignamos la columna X como el nombre de las filas entonces ELIMINAMOS LA COLUMNA  utilizando la FUNCION "NULL"
+```{r}
+usarrests$X <- NULL
+head(usarrests)
+```
+Una vez que el data frame esta bien definido entonces:
+vamos a calcular para cada una de las columnas la VARIANZA que existe en dichas variables
+```{r}
+apply(usarrests, 2, var) # el "2" indica que lo haga por columna, si lo queremos por fila se debe usar el "1"
+```
+"prcomp" resta la media (center = TRUE) y divide por la desviacion tipica (escale = TRUE) cada una de las variables con la intencion de perder la variabilidad tan grande desde una de las variables a la otra. 
+```{r}
+acp <- prcomp(usarrests)
+print(acp) 
+```
+compara las desviaciones que se optienen centrando y escalando la informacion 
+
+date cuenta que al usar la funcion "prcomp" te arroja como resultado una LISTA no un data frame 
+```{r}
+acp <- prcomp(usarrests, 
+              center = TRUE, scale = TRUE)
+print(acp)
+```
+esto nos da los coeficientes de las combinaciones lineales de las variables continuas, o rotaciones. es decir "LA MATRIZ DE ROTACION" 
+si observamos PC1 podemos observar que "murder" Assault" y 'Rape" tienen numeros parecidos lo que quiere decir que estan muy correlacionadas entre estas 3, sin embargo la segunda componente principal toma valores menores para esos 3 valores que ya han sido explicados en la primera CP y encambio le da un peso mucho valor a la poblacion urbana aun cuando las otras 3 se parecen entre si (por eso si se toman los 2 al mismo tiempo se pueden explicar mejor los datos).  
+```{r}
+plot(acp, type = "l")
+```
+esta grafica nos es una representacion de los 4 componentes principales y sus varianzas, normalmente los estadistas utilizan la regla del "CODO", por lo que un profesional se quedaria con la primera y la segunda componente principal (punto en la grafica) y rechazaria la tercera y la cuarta.  
+
+
+si hacemos un resumen de los componentes con "summary" nos da las desviaciones estandar de cada uno de los componentes, se utilizan componentes principales hasta poder explicar cierto porcentaje de los casos, por ejemplo si quicieramos explicar el ~80% de casos podriamos utilizar los primeros dos componentes principales como nos lo dise la proporcion acumulativa, o los primeros 3 componentes si queremos explicar el 95% de los casos. Sin embargo, si solo nos quedamos con una solo podremos explicar el 62% de los casos.
+```{r}
+summary(acp)
+```
+una representacion grafica de lo que nos quiere decir esta tecnica se logra graficando con la FUNCION "biplot"
+
+Al ver las flrchas se puede decir que las variables murder assault y rape tienden hacia PC2 (se mueven en el eje horizontal), mientras que la poblacion urbana tiende mas hacia PC1.
+
+```{r}
+
+biplot(acp, scale = 0)
+```
+
+si quieres traducir del data frame original para tener explicitamente el primer y el segundo componente principal al data frame original puedo computarle la primera componente principal haciendo lo siguiente, "sumando el producto de la primera columnade la matriz de rotacion y multiplicarlo por el data set original por filas ("1")
+y lo mismo para la PC2, por eso nos quedamos con la segunda columna de la matriz de rotacion (acp$rotation[,2])
+
+```{r}
+pc1 <- apply(acp$rotation[,1]*usarrests, 1, sum)
+pc2 <- apply(acp$rotation[,2]*usarrests, 1, sum)
+```
+y ahora agrego esta informacion en el data frame original generando dos nuevas columnas llamadas PC1 y PC2
+
+```{r}
+usarrests$pc1 <- pc1 
+usarrests$pc2 <- pc2
+head(usarrests)
+```
+
+y ya que se tienen los datos de los componentes principales 1 y 2 que explican el `~80% de los casos se podria finalmente eliminar toda la informacion de la tabla original y quedarte solo con esos datos de la siguiente manera 
+```{r}
+usarrests[,1:4] <- NULL
+head(usarrests)
+```
+
+
+
