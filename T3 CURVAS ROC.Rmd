@@ -1,0 +1,98 @@
+---
+title: "03-Curvas ROC"
+output:
+  html_document:
+    df_print: paged
+---
+
+Las curvas ROC sirven para clasificar datos, por ejemplo positivos y negativos en analisis clinicos, tasas de verdaderos positivos (sensibilidad) vs tasas de verdaderos negativos (1- especificidad).
+
+Es decir, las curvas ROC nos modelan en una reprsentacion visual que tan bueno es mi modelo de clasificacion.
+
+primero se debe instalar ROCR si aun no lo tienes instalado 
+install.packages("ROCR")
+
+```{r}
+library(ROCR)
+```
+
+Despues cargamos los datos y los asignamos a "data1" y "data2"
+
+En tabla1 se muestra una tabla con CLASIFICACION NUMERICA (1 o 0) 100 eventos 
+
+En data2 se muestra una tabla en las que se clasificaron 100 personas (CLASIFICACION CATEGORICA) que juegan un videojuego y se clasificaron las personas (de alguna manera) en "buyers" o compradores y "non buyer" o no comprador.
+
+```{r}
+data1 <- read.csv("data/tema3/roc-example-1.csv")
+data2 <- read.csv("data/tema3/roc-example-2.csv")
+#0 -> indica fallo
+#1 -> indica éxito
+```
+
+Se genera el objeto prediccion (pred1) con la funcion "PREDICTION" del paquete ROC que nos da un clasificador o un sistema para clasificar los datos.
+
+asi que le decimos que nos prediga del dataframe 1 la probabilidad en funcion del data1$class, primero las "x" o variable independiente (PROB) y despues "Y" o la variable dependiente (en este caso es CLASS, ya que depende de prob). 
+
+```{r}
+pred1 <- prediction(data1$prob, data1$class)
+```
+
+Elboraremos un objeto del perf1 con la funcion  PERMORFANCE de ROCR al cual le damos un sistema de predictores "pred1" (obtenido en el paso anterior), y despues se les da los dos nombres de la svariables "tpr" (true positive rates) y "fpr" (false positive rates). 
+Este objeto nos da un "objeto formal" que sera un medidor de la eficiencia, basado en el objeto "prediction". 
+```{r}
+perf1 <- performance(pred1, "tpr", "fpr")
+```
+
+La mejor manera de visualizar estos objetos es mediante una grafica de tipo ROC junto con la linea diagonal (puesta con LINES)
+
+La linea central indica un caso aleatorio.
+
+
+```{r}
+plot(perf1)
+lines(par()$usr[1:2], par()$usr[3:4])
+```
+El grafico anterior muestra que esto es un clasificador desente, la siguiente pregunta es...
+EN QUE MOMENTO O APARTIR DE QUE VALORES PUEDO ESTAR SEGURO DE QUE ES UN VERDADERO POSITIVO? 
+
+Para eso se hace un corte en los valores del data frame con un objeto adicional llamado "prob.cuts.1" (que indica la probabilidad de los cortes 1) que sera un data frame con 3 columnas, 
+1 sera el corte llamado "CUT" que nos indicara los cortes (nos quedamos con la variable alpha.values en al posicion 1). FIJARSE QUE AQUI SE INDICA CON @ NO CON $ POR QUE ES UN ONJETO INTERNO DE R.
+2 sera la columna que nos indique la tasa de falsos positivos (nos quedamos con los x.values en la posicion 1)
+3 sera la columna que nos indique la tasa de verdaderos positivos (nos quedamos con los y.values)
+
+Despues analizamos los primeros valores y los ultimos con las funciones HEAD y TAIL.
+
+Con este tipo de data frame podemos "escoger" en base a los datos cual es una probabilidad de verdadero positivo aceptable que sera apartir de la cual aceptaremos un positivo, tenemos que tomar su valor de corte para compararlo con los siguientes datos que lleguen.
+
+```{r}
+prob.cuts.1 <- data.frame(cut = perf1@alpha.values[[1]],
+                          fpr = perf1@x.values[[1]],
+                          tpr = perf1@y.values[[1]])
+head(prob.cuts.1)
+
+tail(prob.cuts.1)
+```
+
+Aqui por ejemplo podemos pensar en una tasa de verdaderos positivos de un 80% (aqui filtramos en prob.cuts.1 en el que la tpr sea mayor al 80%), aqui apartir del dato 55 ya tenemos un valor superior al 80% el cual nos indica que el punto de corte es igual a  0.49815058.
+
+```{r}
+prob.cuts.1[prob.cuts.1$tpr>=0.8,]
+```
+Podemos hacer lo mismo con variables categoricas en el caso de la tabla 2 
+
+asi que primero se hace un predictor en el que le das niveles a las categorias, en este caso la probabilidad mas baja seria equivalente a non buyer y las probabilidades altas serian buyer 
+```{r}
+pred2 <- prediction(data2$prob, data2$class, label.ordering = c("non-buyer", "buyer"))
+```
+
+despues se crea el objeto performance 2, nuevamente con TPR y FPR
+```{r}
+perf2 <- performance(pred2, "tpr", "fpr")
+```
+
+Se realiza el grafico tipo ROC con la linea en medio
+```{r}
+plot(perf2)
+lines(par()$usr[1:2], par()$usr[3:4])
+```
+
