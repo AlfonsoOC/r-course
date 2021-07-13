@@ -1,0 +1,43 @@
+---
+title: "11_log-reg"
+output: html_notebook
+---
+la regresion logistica 
+```{r}
+library(caret)
+```
+
+los valores de salida deben de ser 0 o 1 como clase, esto es importante tenerlo en consideracion 
+```{r}
+bh <- read.csv("Documents/GitHub/r-course/data/tema3/boston-housing-logistic.csv")
+bh$CLASS <- factor(bh$CLASS, levels = c(0,1)) # le decimos explicitamente que las clases son 0 o 1
+```
+
+creamos el conjunto de entrenamiento 
+```{r}
+set.seed(2018)
+t.id <- createDataPartition(bh$CLASS, p=0.7, list = F)
+```
+
+
+hacemos el modelo utilizando gml (generalize lineal model), 
+bh- indica el data frame de partida utilizando los identificadores de testing y usando todas las columnas
+Family- es binomial ya que es 0 o 1
+```{r}
+mod <- glm(CLASS ~ ., data = bh[t.id, ], family = binomial)
+summary(mod)
+```
+aqui lo haremos en dos partes pero pondremos los datos en la tabla original 
+```{r}
+bh[-t.id, "PROB_SUCCESS"] <- predict(mod, newdata = bh[-t.id,], type="response")
+```
+aqui hago otra columna que me dira la probabilidad de exito con un 50% de probabilidad
+```{r}
+bh[-t.id, "PRED_50"] <- ifelse(bh[-t.id, "PROB_SUCCESS"]>=0.5, 1, 0)
+```
+
+aqui veo que tal se ajusta el modelo a mis datos
+```{r}
+table(bh[-t.id,"CLASS"], bh[-t.id,"PRED_50"], dnn=c("Actual","Predicho"))
+```
+

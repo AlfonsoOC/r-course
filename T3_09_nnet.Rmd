@@ -1,0 +1,63 @@
+---
+title: "09-nnet"
+output: html_notebook
+---
+
+
+Para redes neuronales necesitamos el paquete "nnet", solo una vez usando la siguiente linea
+
+install.packages("nnet")
+
+
+cargamos la paqueteria
+```{r}
+library(nnet)
+library(caret)
+```
+
+cargamos los datos que nos interesan y hacemos la columna "class" de tipo class
+```{r}
+bn <- read.csv("Documents/GitHub/r-course/data/tema3/banknote-authentication.csv") 
+bn$class <- factor(bn$class)
+```
+
+hacemos nuestro grupo de entrenamiento seleccionando el 70% del total de la informacion contenida en la lista "bn" en "class" pero para la informacion de entrenamiento no la utilizo como lista
+```{r}
+t.id <- createDataPartition(bn$class, p= 0.7, list = F)
+```
+
+aqui hago el modelo en base a redes neuronales
+SIZE= numero de unidades de la capa mas interna que la red debe utilizar (por defecto usa 1 pero aqui usamos 3), usar un valor cercano al numero de valores de entrada que vamos a poner, ya que aqui pasamos 4 valores usamos un size=3
+MAXIT= maximo de iteracciones que le permitimos para que entrene, si llega al maximo simplemente se detiene
+DECAY= controlar el overfiting, para que no se ajuste demaciado a los datos de entrenamiento de tal manera que le damos un poco de libertad
+RANG= rango de pesos aleatorios iniciales que hay que asignar a la red neuronal, (rang)(valmax)= debe ser mas parecido a uno  (aqui se vera que el maximo de la "curtosis es casi 20 - 20*05 =1)
+NA.OMIT= los NA provocan errores en los modelos, con esto igual a "na.omit" los vamos a omitir de nuestro estudio 
+SKIP=T aniade una capa adicional para separa los nodos de entrada y de salida
+
+```{r}
+mod <- nnet(class ~ ., data = bn[t.id,], 
+            size = 3, maxit = 10000, decay = .001, rang = 0.05,
+            na.action = na.omit, skip = T)
+#rang * max(|variables|) ~ 1
+apply(bn, 2, max)
+```
+aqui usamos los datos que no usamos para entrenar para ver que tal se ajusta el modelo a los datos en general
+```{r}
+pred <- predict(mod, newdata = bn[-t.id,], type = "class")
+```
+
+una vez que tenemos e valor de predicion hacemos un table para observar la matriz de confusion que nos dira si se ajusta o no nuestro modelo, en este caso la funcion fue perfecta por que no se equivoca ninguna vez
+```{r}
+table(bn[-t.id,]$class, pred,dnn = c("Actual", "Predichos") )
+```
+
+aqui mediante a la curva ROC podemos checarque nuestro modelo es perfecto
+```{r}
+library(ROCR)
+pred2 <- predict(mod, newdata = bn[-t.id,], type = "raw")
+perf <- performance(prediction(pred2, bn[-t.id,"class"]), 
+                    "tpr", "fpr")
+plot(perf)
+```
+
+

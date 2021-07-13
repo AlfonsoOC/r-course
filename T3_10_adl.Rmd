@@ -1,0 +1,44 @@
+---
+title: "10_adl"
+output: html_notebook
+---
+instalamos el maquete MASS
+```{r}
+#install.packages("MASS")
+library(MASS)
+library(caret)
+```
+cargo el paquete y convierto la columna class como tipo clase
+```{r}
+
+bn<- read.csv("Documents/GitHub/r-course/data/tema3/banknote-authentication.csv")
+bn$class <- factor(bn$class)
+```
+
+creamos el data partition
+```{r}
+set.seed(2018)
+t.id <- createDataPartition(bn$class, p=0.7, list = F)
+```
+el modelo se hara haciendo la paqueteria lda 
+usando las columnas de entrada del 1 al 4
+y las columnas de salida la columna 5 que es la clase
+```{r}
+mod <- lda(bn[t.id,1:4], bn[t.id,5])
+#mod <- lda(class ~., data = bn[t.id,])
+```
+
+en este caso creamos una nueva columna en la tabla original llamada "pred"
+```{r}
+bn[t.id, "Pred"] <- predict(mod, bn[t.id, 1:4])$class
+```
+
+checo que tan bien se ajusta mi modelo los datos que no usamos para entrenar
+```{r}
+table(bn[t.id, "class"], bn[t.id, "Pred"], dnn = c("Actual", "Predichos"))
+```
+
+```{r}
+bn[-t.id, "Pred"] <- predict(mod, bn[-t.id, 1:4])$class 
+table(bn[-t.id, "class"], bn[-t.id, "Pred"], dnn = c("Actual", "Predichos"))
+```
