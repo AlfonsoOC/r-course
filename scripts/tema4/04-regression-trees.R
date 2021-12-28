@@ -1,10 +1,13 @@
+#Arboles de regression
+
 install.packages("rpart.plot")
 
 library(rpart)
 library(rpart.plot)
 library(caret)
 
-bh <- read.csv("../data/tema4/BostonHousing.csv")
+bh <- read.csv("../../data/tema4/BostonHousing.csv")
+#La variable que voy a predecir es MEDV "mediana de habitabilidad"
 t.id <- createDataPartition(bh$MEDV, p = .7, list = F)
 
 bfit <- rpart(MEDV ~., data = bh[t.id,])
