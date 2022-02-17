@@ -1,7 +1,9 @@
 #k-fold cross validation
-bh <- read.csv("../data/tema4/BostonHousing.csv")
+bh <- read.csv("~/Documents/GitHub/r-course//data/tema4/BostonHousing.csv")
 
-
+#Validacion cruzada ayuda a mejorar la eficiencia del modelo evitando el overfitting 
+#esta es una funcion para hacer validacion cruzada
+#la validacion cruzada utiliza distintos subconjuntos de entrenamiento y validacion para mejorar el overfiting
 kfold.crossval.reg <- function(df, nfolds){
   fold <- sample(1:nfolds, nrow(df), replace = T)
   cat(fold)
@@ -19,7 +21,7 @@ kfold.cval.reg.iter <- function(k, df, fold){
   
   tr.ids <- !fold %in% c(k)
   test.ids <- fold %in% c(k)
-  mod <- lm(MEDV ~., data = df[tr.ids,])
+  mod <- lm(MEDV ~., data = df[tr.ids,]) #aqui estamos usando el modelo lineal pero se podria usar cualquiera de los modelos
   pred <- predict(mod, df[test.ids,])
   sqr.errs <- (pred - df[test.ids,"MEDV"])^2
   mean(sqr.errs)
